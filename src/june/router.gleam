@@ -12,9 +12,6 @@ import simplifile
 import snag
 import wisp
 
-// FIXME:
-// const june_data_path = "/home/fawn/.local/share/june"
-
 fn data_path() {
   case env.get_string("HOME") {
     Ok(home) -> home <> "/.local/share/june/"
