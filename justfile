@@ -10,3 +10,7 @@ _default:
 
 @run: (tailwind)
     gleam run
+
+push:
+    git push
+    git push gh
