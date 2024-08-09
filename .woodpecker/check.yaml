@@ -2,6 +2,7 @@ steps:
   check:
     image: ghcr.io/gleam-lang/gleam:v1.4.1-elixir-alpine
     commands:
+      - mix local.hex --force
       - gleam deps download
       - gleam check
       - gleam format --check src
