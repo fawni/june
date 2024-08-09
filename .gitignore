@@ -2,5 +2,6 @@
 *.ez
 *.env
 /build
+/priv/static/css
 node_modules/
 erl_crash.dump
