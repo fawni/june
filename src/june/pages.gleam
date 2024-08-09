@@ -7,11 +7,13 @@ fn document(children: List(html.Node)) -> html.Node {
   html.Html([], [
     html.Head([
       html.title("June"),
+      html.meta([attr.name("description"), attr.content("pomf clone too 🌈")]),
       html.link([
         attr.rel("icon"),
         attr.type_("image/svg+xml"),
         attr.href("/public/favicon.svg"),
       ]),
+      html.meta([attr.name("theme-color"), attr.content("#d895ee")]),
       html.meta([
         attr.name("viewport"),
         attr.content("width=device-width, initial-scale=1.0"),
