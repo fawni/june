@@ -1,0 +1,34 @@
+name = "june"
+version = "1.0.0"
+description = "pomf clone too"
+licences = ["Apache-2.0"]
+repository = { type = "github", user = "fawn", repo = "june" }
+links = [{ title = "Website", href = "https://cdn.fawn.moe" }]
+
+[dependencies]
+wisp = "~> 0.16.0"
+mist = "~> 1.2.0"
+nakai = "~> 0.11.0"
+
+gleam_stdlib = "~> 0.39.0"
+gleam_erlang = "~> 0.25.0"
+gleam_http = "~> 3.6.0"
+
+blake2 = "~> 1.0.4"
+
+simplifile = "~> 2.0.1"
+filepath = "~> 1.0.0"
+
+snag = "~> 0.3.0"
+glenvy = "~> 1.0.1"
+
+[dev-dependencies]
+glailglind = "~> 1.1.3"
+
+[tailwind]
+version = "3.4.3"
+args = [
+  "--config=tailwind.config.js",
+  "--input=./src/css/june.css",
+  "--output=./priv/static/css/june.css",
+]
