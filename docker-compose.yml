@@ -1,6 +1,7 @@
 services:
   june:
-    build: .
+    image: fawni/june
+    # build: .
     restart: unless-stopped
     environment:
       JUNE_PORT: 6489
