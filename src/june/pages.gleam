@@ -162,9 +162,9 @@ pub fn home() -> wisp.Response {
         const body = await res.text();
         if (res.status === 201) {
           console.log('uploaded ' + body);
-          await navigator.clipboard.writeText(window.location.href + body);
           if (formData.get('stay')) {
-            macaron.success('Uploaded! Click to view', { action: () => window.location.href = '/' + body });
+            await navigator.clipboard.writeText(window.location.href + body);
+            macaron.success('Copied to clipboard! Click to view', { action: () => window.location.href = '/' + body });
           } else {
             window.location.href = body;
           }

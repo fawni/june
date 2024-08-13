@@ -3,7 +3,7 @@ version = "1.0.0"
 description = "pomf clone too"
 licences = ["Apache-2.0"]
 repository = { type = "github", user = "fawn", repo = "june" }
-links = [{ title = "Website", href = "https://cdn.fawn.moe" }]
+links = [{ title = "Website", href = "https://june.fawn.moe" }]
 
 [dependencies]
 wisp = "~> 0.16.0"
