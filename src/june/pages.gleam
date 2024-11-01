@@ -26,7 +26,7 @@ fn document(children: List(html.Node)) -> html.Node {
       html.link([
         attr.href("https://fonts.gstatic.com"),
         attr.rel("preconnect"),
-        attr.crossorigin(),
+        attr.crossorigin(""),
       ]),
       html.link([
         attr.href(
