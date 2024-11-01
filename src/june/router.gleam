@@ -2,6 +2,7 @@ import filepath
 import gleam/bool
 import gleam/http
 import gleam/list
+import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string_builder
 import glenvy/env
@@ -40,13 +41,55 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
   use formdata <- wisp.require_form(req)
   let token = wisp.get_secret_key_base(req)
 
-  case upload_file(token, formdata) {
-    Ok(name) -> {
-      wisp.created()
-      |> wisp.html_body(name |> string_builder.from_string)
+  case validate_token(token, formdata) {
+    #(_, Some(True)) -> {
+      let to_delete = list.key_find(formdata.values, "delete")
+      case to_delete {
+        Ok(file_name) -> {
+          case delete_file(file_name) {
+            Ok(msg) -> {
+              msg
+              |> string_builder.from_string
+              |> wisp.html_response(200)
+            }
+            Error(err) -> {
+              err
+              |> snag.line_print
+              |> string_builder.from_string
+              |> wisp.html_response(400)
+            }
+          }
+        }
+        _ -> {
+          case upload_file(formdata) {
+            Ok(name) -> {
+              wisp.created()
+              |> wisp.html_body(name |> string_builder.from_string)
+            }
+            Error(err) -> {
+              err
+              |> snag.line_print
+              |> string_builder.from_string
+              |> wisp.html_response(400)
+            }
+          }
+        }
+      }
     }
-    Error(err) -> {
-      err
+    #(invalid, Some(False)) -> {
+      wisp.log_warning(
+        "User attempted to upload with an invalid token: \"" <> invalid <> "\"",
+      )
+
+      snag.new("Invalid token: \"" <> invalid <> "\"")
+      |> snag.line_print
+      |> string_builder.from_string
+      |> wisp.html_response(400)
+    }
+    #(_, None) -> {
+      wisp.log_warning("User attempted to upload without a token")
+
+      snag.new("Missing token")
       |> snag.line_print
       |> string_builder.from_string
       |> wisp.html_response(400)
@@ -54,49 +97,59 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
   }
 }
 
-fn upload_file(
+fn validate_token(
   june_token: String,
   formdata: wisp.FormData,
-) -> snag.Result(String) {
+) -> #(String, Option(Bool)) {
   case list.key_find(formdata.values, "token") {
-    Ok(token) if token == june_token -> {
-      use file <- result.try(
-        list.key_find(formdata.files, "file")
-        |> as_snag("No file provided"),
-      )
+    Ok(token) if token == june_token -> #(token, Some(True))
+    Ok(invalid) if invalid != "" -> #(invalid, Some(False))
+    _ -> #("", None)
+  }
+}
 
-      use file_bits <- result.try(
-        simplifile.read_bits(from: file.path)
-        |> as_snag("simplifile: Could not read file bits"),
-      )
-      let hashed = blake2b.hash(file_bits)
-      let file_name = case filepath.extension(file.file_name) {
-        Ok(ext) -> hashed <> "." <> ext
-        Error(_) -> hashed
-      }
+fn upload_file(formdata: wisp.FormData) -> snag.Result(String) {
+  use file <- result.try(
+    list.key_find(formdata.files, "file")
+    |> as_snag("No file provided"),
+  )
 
-      use _ <- result.try(
-        simplifile.create_directory_all(data_path())
-        |> as_snag("simplifile: Could not create june data directory"),
-      )
+  use file_bits <- result.try(
+    simplifile.read_bits(from: file.path)
+    |> as_snag("simplifile: Could not read file bits"),
+  )
+  let hashed = blake2b.hash(file_bits)
+  let file_name = case filepath.extension(file.file_name) {
+    Ok(ext) -> hashed <> "." <> ext
+    Error(_) -> hashed
+  }
 
-      use _ <- result.try(
-        simplifile.copy_file(at: file.path, to: data_path() <> file_name)
-        |> as_snag("simplifile: Could not copy file to june data directory"),
-      )
-      wisp.log_info("File uploaded to " <> data_path() <> file_name)
+  use _ <- result.try(
+    simplifile.create_directory_all(data_path())
+    |> as_snag("simplifile: Could not create june data directory"),
+  )
 
-      Ok(file_name)
+  use _ <- result.try(
+    simplifile.copy_file(at: file.path, to: data_path() <> file_name)
+    |> as_snag("simplifile: Could not copy file to june data directory"),
+  )
+  wisp.log_info("File uploaded to " <> data_path() <> file_name)
+
+  Ok(file_name)
+}
+
+fn delete_file(file_name: String) -> snag.Result(String) {
+  case simplifile.delete(data_path() <> file_name) {
+    Ok(_) -> {
+      wisp.log_warning("Deleted file " <> file_name)
+
+      Ok("File deleted successfully")
     }
-    Ok(invalid) if invalid != "" -> {
+    Error(_) -> {
       wisp.log_warning(
-        "User attempted to upload with an invalid token: \"" <> invalid <> "\"",
+        "User attempted to delete non-existent file " <> file_name,
       )
-      snag.error("Invalid token: \"" <> invalid <> "\"")
-    }
-    _ -> {
-      wisp.log_warning("User attempted to upload without a token")
-      snag.error("Missing token")
+      snag.error("Could not delete file as it does not exist")
     }
   }
 }
