@@ -1,0 +1,10 @@
+#!/bin/sh
+
+HOST=https://june.fawn.moe
+TOKEN=$(pass june/token)
+FILE=${1:-$(fzf)}
+
+test "$TOKEN" || TOKEN=$(gum input --placeholder "june token" --password)
+RESPONSE=$(curl -F"file=@$FILE" "$HOST" -Ftoken="$TOKEN" -sf)
+
+test "$RESPONSE" && echo "$HOST/$RESPONSE"
