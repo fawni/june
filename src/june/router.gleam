@@ -114,6 +114,8 @@ fn upload_file(formdata: wisp.FormData) -> snag.Result(String) {
     |> as_snag("No file provided"),
   )
 
+  wisp.log_info("Uploading " <> file.file_name)
+
   use file_bits <- result.try(
     simplifile.read_bits(from: file.path)
     |> as_snag("simplifile: Could not read file bits"),

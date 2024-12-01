@@ -152,6 +152,7 @@ pub fn home() -> wisp.Response {
           return;
         }
         
+        macaron.info('Uploading...');
         let res = await fetch('/', {
           method: 'POST',
           body: formData,
