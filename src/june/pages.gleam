@@ -151,7 +151,21 @@ pub fn home() -> wisp.Response {
           macaron.error('error: No file provided');
           return;
         }
-        
+
+        let verify = await fetch('/verify', {
+          method: 'POST',
+          body: formData.get('token'),
+        }).catch((e) => {
+          macaron.error('Error verifying token', e);
+        });
+
+        if (verify.status !== 200) {
+          macaron.error('error: Invalid token');
+          return;
+        }
+
+        // TODO: progress bar
+
         macaron.info('Uploading...');
         let res = await fetch('/', {
           method: 'POST',

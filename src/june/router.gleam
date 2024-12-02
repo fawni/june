@@ -4,6 +4,7 @@ import gleam/http
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import gleam/string_builder
 import glenvy/env
 import june/blake2b
@@ -25,7 +26,23 @@ pub fn handle_request(req: wisp.Request) -> wisp.Response {
 
   case wisp.path_segments(req) {
     [] -> handle_root(req)
+    ["verify"] -> handle_verify(req)
     _ -> handle_retrieve_file(req)
+  }
+}
+
+fn handle_verify(req: wisp.Request) -> wisp.Response {
+  use body <- wisp.require_string_body(req)
+
+  let verify =
+    req
+    |> wisp.get_secret_key_base
+    |> validate_token(body)
+
+  case verify {
+    True -> wisp.ok() |> wisp.string_body("valid token")
+    False ->
+      wisp.html_response("invalid token" |> string_builder.from_string, 403)
   }
 }
 
@@ -41,7 +58,7 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
   use formdata <- wisp.require_form(req)
   let token = wisp.get_secret_key_base(req)
 
-  case validate_token(token, formdata) {
+  case validate_formdata(token, formdata) {
     #(_, Some(True)) -> {
       let to_delete = list.key_find(formdata.values, "delete")
       case to_delete {
@@ -97,7 +114,11 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
   }
 }
 
-fn validate_token(
+fn validate_token(june_token: String, token: String) -> Bool {
+  june_token == token
+}
+
+fn validate_formdata(
   june_token: String,
   formdata: wisp.FormData,
 ) -> #(String, Option(Bool)) {
