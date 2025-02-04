@@ -6,29 +6,30 @@ repository = { type = "github", user = "fawn", repo = "june" }
 links = [{ title = "Website", href = "https://june.fawn.moe" }]
 
 [dependencies]
-wisp = "~> 1.2"
-mist = "~> 3.0"
-nakai = "~> 1.0"
+wisp = "~> 1.5"
+mist = "~> 4.0"
+nakai = "~> 1.1"
 
-gleam_stdlib = "~> 0.39"
-gleam_erlang = "~> 0.25"
-gleam_http = "~> 3.6"
+gleam_stdlib = "~> 0.54"
+gleam_erlang = "~> 0.34"
+gleam_http = "~> 3.7"
 
 blake2 = "~> 1.0"
 
-simplifile = "~> 2.0"
-filepath = "~> 1.0"
+simplifile = "~> 2.2"
+filepath = "~> 1.1"
 
-snag = "~> 0.3"
-glenvy = "~> 1.0"
+snag = "~> 1.1"
+glenvy = "~> 1.2"
 
 [dev-dependencies]
 glailglind = "~> 1.1"
 
 [tailwind]
-version = "3.4.13"
+version = "3.4.11"
 args = [
   "--config=tailwind.config.js",
   "--input=./src/css/june.css",
   "--output=./priv/static/css/june.css",
 ]
+path = "/usr/bin/tailwindcss"
