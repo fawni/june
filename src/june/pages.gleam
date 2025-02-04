@@ -127,7 +127,7 @@ pub fn home() -> wisp.Response {
             html.input([
               attr.name("stay"),
               attr.type_("checkbox"),
-              attr.checked(),
+              // attr.checked(),
               attr.class("checkbox checkbox-info"),
             ]),
             html.span_text([], " Stay on page"),
@@ -142,6 +142,7 @@ pub fn home() -> wisp.Response {
       [],
       "
       const form = document.getElementById('form');
+      const fileInput = document.querySelector('input[type=\\'file\\']');
 
       const handleSubmit = async (event) => {
         event.preventDefault();
@@ -176,10 +177,10 @@ pub fn home() -> wisp.Response {
 
         const body = await res.text();
         if (res.status === 201) {
-          console.log('uploaded ' + body);
+          console.log('uploaded: ' + body);
           if (formData.get('stay')) {
-            await navigator.clipboard.writeText(window.location.href + body);
-            macaron.success('Copied to clipboard! Click to view', { action: () => window.location.href = '/' + body });
+            // await navigator.clipboard.writeText(window.location.href + body);
+            macaron.success('Uploaded! Click to view', { action: () => window.location.href = '/' + body, timeout: 10000 });
           } else {
             window.location.href = body;
           }
@@ -188,7 +189,46 @@ pub fn home() -> wisp.Response {
         }
       };
 
-      form.addEventListener('submit', handleSubmit);",
+      form.addEventListener('submit', handleSubmit);
+
+      function dataURItoFile(dataURI) {
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+          byteString = atob(dataURI.split(',')[1]);
+        else
+          byteString = unescape(dataURI.split(',')[1]);
+
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        var ext = mimeString.split('/')[1];
+
+        var ia = new Uint8Array(byteString.length);
+        for (var i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+
+        var blob = new Blob([ia], {type:mimeString});
+
+        return new File([blob], `clipboard.${ext}`, {type: mimeString});
+      }
+
+      document.onpaste = function(event) {
+        var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+        for (index in items) {
+          var item = items[index];
+          if (item.kind === 'file') {
+            var blob = item.getAsFile();
+            var reader = new FileReader();
+            reader.onload = function(event) {
+              var file = dataURItoFile(event.target.result);
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              fileInput.files = dataTransfer.files;
+            }; 
+            reader.readAsDataURL(blob);
+          };
+        };
+      };
+    ",
     ),
   ])
   |> nakai.to_string_builder()
