@@ -40,8 +40,7 @@ fn handle_verify(req: wisp.Request) -> wisp.Response {
 
   case verify {
     True -> wisp.ok() |> wisp.string_body("valid token")
-    False ->
-      wisp.html_response("invalid token" |> string_tree.from_string, 403)
+    False -> wisp.html_response("invalid token" |> string_tree.from_string, 403)
   }
 }
 

@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 :root {
-    --macaron-shadow: #101010 !important;
+  --macaron-shadow: #101010 !important;
 }

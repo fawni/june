@@ -33,4 +33,3 @@ steps:
           username: fawn
           password:
             from_secret: CODEBERG_TOKEN
-
