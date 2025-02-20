@@ -1,11 +1,12 @@
-from oven/bun:1.1-alpine as bun
+from oven/bun:1.2-alpine as bun
 
 copy . /opt/app/
 workdir /opt/app/
 
-run bun i
+run bun i \
+  && bun i -g @tailwindcss/cli
 
-from ghcr.io/gleam-lang/gleam:v1.4.1-elixir-alpine as builder
+from ghcr.io/gleam-lang/gleam:v1.8.1-elixir-alpine as builder
 
 workdir /opt/app/
 copy --from=bun /opt/app/ /opt/app/
@@ -13,7 +14,6 @@ copy --from=bun /opt/app/ /opt/app/
 run mix local.hex --force 
 
 run gleam deps download \
-  && gleam run -m tailwind/install \
   && gleam run -m tailwind/run
 
 run gleam export erlang-shipment \
