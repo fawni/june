@@ -8,12 +8,14 @@ when:
       - "src/**/*.gleam"
       - "priv/"
       - "tailwind.config.js"
+      - ".woodpecker/publish.yaml"
 
 steps:
   publish:
     image: woodpeckerci/plugin-docker-buildx
     settings:
-      platforms: linux/amd64,linux/arm64/v8
+      # platforms: linux/amd64,linux/arm64/v8
+      platforms: linux/amd64
       auto_tag: true
       repo:
         - fawni/june

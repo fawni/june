@@ -1,20 +1,15 @@
 services:
   june:
+    container_name: june
     image: fawni/june
-    # build: .
     restart: unless-stopped
     environment:
       JUNE_PORT: 6489
-      JUNE_TOKEN: ""
+      JUNE_TOKEN: "meow"
     ports:
-      - "6489:6489"
+      - "6489"
     volumes:
       - junecdn:/home/menhera/.local/share/june
-    networks:
-      - june
 
 volumes:
   junecdn:
-
-networks:
-  june:

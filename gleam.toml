@@ -32,4 +32,3 @@ args = [
   "--input=./src/css/june.css",
   "--output=./priv/static/css/june.css",
 ]
-path = "/usr/bin/tailwindcss"
