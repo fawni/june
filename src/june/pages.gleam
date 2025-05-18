@@ -155,7 +155,13 @@ pub fn home() -> wisp.Response {
             ),
           ],
         ),
-        html.a_text([attr.id("upload-result"), attr.class("hidden font-bold text-primary pt-4")], "Result")
+        html.a_text(
+          [
+            attr.id("upload-result"),
+            attr.class("hidden font-bold text-primary pt-4"),
+          ],
+          "Result",
+        ),
       ],
     ),
     html.Script(
