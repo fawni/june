@@ -167,15 +167,17 @@ pub fn home() -> wisp.Response {
         ),
       ],
     ),
-    html.a_text(
-      [
-        attr.id("upload-result"),
-        attr.class(
-          "hidden link link-secondary link-hover w-full text-center inline-block mt-4",
-        ),
-      ],
-      "",
-    ),
+    html.div([attr.class("w-full text-center mt-4")], [
+      html.a_text(
+        [
+          attr.id("upload-result"),
+          attr.class(
+            "hidden link link-secondary link-hover",
+          ),
+        ],
+        "",
+      ),
+    ]),
     html.Script(
       [],
       "
