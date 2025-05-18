@@ -47,38 +47,49 @@ fn document(children: List(html.Node)) -> html.Node {
         ],
         [],
       ),
+      html.Element(
+        "script",
+        [
+          attr.src("https://unpkg.com/axios/dist/axios.min.js"),
+          attr.type_("text/javascript"),
+        ],
+        [],
+      ),
     ]),
-    html.Body([attr.class("overflow-hidden")], [
-      html.div([attr.class("hero bg-base-100 min-h-screen")], [
-        html.div([attr.class("hero-content text-center")], [
-          html.div([attr.class("max-w-md")], [
-            html.h1_text(
-              [attr.class("text-3xl font-bold text-primary")],
-              "June",
-            ),
-            html.div(
-              [
-                attr.class(
-                  "flex py-6 whitespace-pre justify-center align-center",
-                ),
-              ],
-              [
-                html.span_text([], "Made with "),
-                html.span_text([attr.class("text-error")], "♡"),
-                html.span_text([], " by "),
-                html.a_text(
-                  [
-                    attr.class("font-bold text-secondary"),
-                    attr.href("https://fawn.moe"),
-                  ],
-                  "fawn",
-                ),
-              ],
-            ),
-            html.Fragment(children),
+    html.Body([], [
+      html.div(
+        [attr.class("hero bg-base-100 min-h-[calc(100vh-20px-2*16px)]")],
+        [
+          html.div([attr.class("hero-content text-center")], [
+            html.div([attr.class("max-w-md")], [
+              html.h1_text(
+                [attr.class("text-3xl font-bold text-primary")],
+                "June",
+              ),
+              html.div(
+                [
+                  attr.class(
+                    "flex py-6 whitespace-pre justify-center align-center",
+                  ),
+                ],
+                [
+                  html.span_text([], "Made with "),
+                  html.span_text([attr.class("text-error")], "♡"),
+                  html.span_text([], " by "),
+                  html.a_text(
+                    [
+                      attr.class("font-bold text-secondary"),
+                      attr.href("https://fawn.moe"),
+                    ],
+                    "fawn",
+                  ),
+                ],
+              ),
+              html.Fragment(children),
+            ]),
           ]),
-        ]),
-      ]),
+        ],
+      ),
       html.footer(
         [
           attr.class(
@@ -122,21 +133,29 @@ pub fn home() -> wisp.Response {
           attr.placeholder("Token"),
           attr.class("input input-bordered input-info w-full max-w-xs my-6"),
         ]),
-        html.label(
-          [attr.class("label inline-flex cursor-pointer whitespace-pre mb-8")],
-          [
-            html.input([
-              attr.name("stay"),
-              attr.type_("checkbox"),
-              // attr.checked(),
-              attr.class("checkbox checkbox-info"),
-            ]),
-            html.span_text([], " Stay on page"),
-          ],
-        ),
         html.div([], [
           html.button_text([attr.class("btn btn-success")], "Upload"),
         ]),
+        html.div(
+          [
+            attr.class("progress-container p-6 hidden"),
+            attr.id("upload-progress-container"),
+          ],
+          [
+            html.div_text([attr.id("upload-name"), attr.class("break-all")], ""),
+            html.div_text([attr.id("upload-size"), attr.class("font-bold")], ""),
+            html.progress(
+              [
+                attr.class("progress progress-info w-full"),
+                attr.id("upload-progress"),
+                attr.value("0"),
+                attr.Attr("max", "100"),
+              ],
+              [],
+            ),
+          ],
+        ),
+        html.a_text([attr.id("upload-result"), attr.class("hidden font-bold text-primary pt-4")], "Result")
       ],
     ),
     html.Script(
@@ -144,20 +163,37 @@ pub fn home() -> wisp.Response {
       "
       const form = document.getElementById('form');
       const fileInput = document.querySelector('input[type=\\'file\\']');
+      const progressContainer = document.getElementById('upload-progress-container');
+      const progressName = document.getElementById('upload-name');
+      const progressSize = document.getElementById('upload-size');
+      const progressBar = document.getElementById('upload-progress');
+      const uploadResult = document.getElementById('upload-result');
+
+      function formatBytes(bytes, decimals = 1) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1000;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+      }
 
       const handleSubmit = async (event) => {
         event.preventDefault();
-        const formData = new FormData(event.target);
+        const formData = new FormData(form);
 
         if (form.elements.file.files.length === 0) {
           macaron.error('error: No file provided');
           return;
         }
 
-        let verify = await fetch('/verify', {
-          method: 'POST',
-          body: formData.get('token'),
-        }).catch((e) => {
+        const file = form.elements.file.files[0];
+        const fileName = file.name;
+        const fileSize = formatBytes(file.size);
+
+        let verify = await axios.post('/verify',
+          formData.get('token'),
+        ).catch((e) => {
           macaron.error('Error verifying token', e);
         });
 
@@ -166,28 +202,27 @@ pub fn home() -> wisp.Response {
           return;
         }
 
-        // TODO: progress bar
+        progressName.innerText = fileName;
+        progressSize.innerText = fileSize;
+        progressContainer.classList.remove('hidden');
+        progressBar.value = 0;
+        uploadResult.classList.add('hidden');
 
-        macaron.info('Uploading...');
-        let res = await fetch('/', {
-          method: 'POST',
-          body: formData,
-        }).catch((e) => {
-          macaron.error('Error uploading file', e);
-        });
-
-        const body = await res.text();
-        if (res.status === 201) {
-          console.log('uploaded: ' + body);
-          if (formData.get('stay')) {
-            // await navigator.clipboard.writeText(window.location.href + body);
-            macaron.success('Uploaded! Click to view', { action: () => window.location.href = '/' + body, timeout: 10000 });
-          } else {
-            window.location.href = body;
+        axios.post('/', formData, {
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.lengthComputable) {
+            const percentComplete = (progressEvent.loaded / progressEvent.total) * 100;
+            progressBar.value = percentComplete;
           }
-        } else {
-          macaron.error('Failed to upload ' + formData.get('file')?.name + '\\n' + body);
         }
+        }).then(response => {
+          console.log('uploaded: ' + response.data);
+          macaron.success('Successfully uploaded!', { action: () => window.location.href = '/' + response.data, timeout: 10000 });
+          uploadResult.href = '/' + response.data;
+          uploadResult.classList.remove('hidden');
+        }).catch(error => {
+            macaron.error('Failed to upload: ' + error.message);
+        });
       };
 
       form.addEventListener('submit', handleSubmit);
