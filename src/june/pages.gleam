@@ -171,9 +171,7 @@ pub fn home() -> wisp.Response {
       html.a_text(
         [
           attr.id("upload-result"),
-          attr.class(
-            "hidden link link-secondary link-hover",
-          ),
+          attr.class("hidden link link-secondary link-hover"),
         ],
         "",
       ),
