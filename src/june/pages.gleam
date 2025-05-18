@@ -98,7 +98,7 @@ fn document(children: List(html.Node)) -> html.Node {
         ],
         [
           html.span([attr.class("flex")], [
-            html.Text("Copyright (c) 2024 "),
+            html.Text("Copyright (c) 2025 "),
             html.b_text([], "fawn"),
             html.p_text([attr.class("text-error")], "♡"),
             html.a_text(
@@ -125,32 +125,27 @@ pub fn home() -> wisp.Response {
       ],
       [
         html.legend_text([attr.class("fieldset-legend")], "Upload File"),
-        html.form(
-          [
-            attr.enctype("multipart/form-data"),
-            attr.id("form"),
-          ],
-          [
-            html.label_text([attr.class("label")], "File"),
-            html.input([
-              attr.type_("file"),
-              attr.name("file"),
-              attr.class(
-                "file-input file-input-bordered file-input-info w-full",
-              ),
-            ]),
-            html.label_text([attr.class("label")], "Token"),
-            html.input([
-              attr.type_("password"),
-              attr.name("token"),
-              attr.placeholder("top sekret"),
-              attr.class("input input-bordered input-info w-full"),
-            ]),
-            html.div([], [
-              html.button_text([attr.class("btn btn-success w-full mt-8")], "Upload"),
-            ]),
-          ],
-        ),
+        html.form([attr.enctype("multipart/form-data"), attr.id("form")], [
+          html.label_text([attr.class("label")], "File"),
+          html.input([
+            attr.type_("file"),
+            attr.name("file"),
+            attr.class("file-input file-input-bordered file-input-info w-full"),
+          ]),
+          html.label_text([attr.class("label")], "Token"),
+          html.input([
+            attr.type_("password"),
+            attr.name("token"),
+            attr.placeholder("top sekret"),
+            attr.class("input input-bordered input-info w-full"),
+          ]),
+          html.div([], [
+            html.button_text(
+              [attr.class("btn btn-success w-full mt-8")],
+              "Upload",
+            ),
+          ]),
+        ]),
       ],
     ),
     html.div(
@@ -175,7 +170,9 @@ pub fn home() -> wisp.Response {
     html.a_text(
       [
         attr.id("upload-result"),
-        attr.class("hidden link link-secondary link-hover w-full text-center inline-block mt-4"),
+        attr.class(
+          "hidden link link-secondary link-hover w-full text-center inline-block mt-4",
+        ),
       ],
       "",
     ),
