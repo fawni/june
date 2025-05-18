@@ -60,10 +60,10 @@ fn document(children: List(html.Node)) -> html.Node {
       html.div(
         [attr.class("hero bg-base-100 min-h-[calc(100vh-20px-2*16px)]")],
         [
-          html.div([attr.class("hero-content text-center")], [
-            html.div([attr.class("max-w-md")], [
+          html.div([attr.class("hero-content")], [
+            html.div([], [
               html.h1_text(
-                [attr.class("text-3xl font-bold text-primary")],
+                [attr.class("text-3xl font-bold text-primary text-center")],
                 "June",
               ),
               html.div(
@@ -117,52 +117,67 @@ fn document(children: List(html.Node)) -> html.Node {
 
 pub fn home() -> wisp.Response {
   document([
-    html.form(
-      [attr.enctype("multipart/form-data"), attr.id("form"), attr.class("mt-8")],
+    html.fieldset(
       [
-        html.input([
-          attr.type_("file"),
-          attr.name("file"),
-          attr.class(
-            "file-input file-input-bordered file-input-info w-full max-w-xs",
-          ),
-        ]),
-        html.input([
-          attr.type_("password"),
-          attr.name("token"),
-          attr.placeholder("Token"),
-          attr.class("input input-bordered input-info w-full max-w-xs my-6"),
-        ]),
-        html.div([], [
-          html.button_text([attr.class("btn btn-success")], "Upload"),
-        ]),
-        html.div(
-          [
-            attr.class("progress-container p-6 hidden"),
-            attr.id("upload-progress-container"),
-          ],
-          [
-            html.div_text([attr.id("upload-name"), attr.class("break-all")], ""),
-            html.div_text([attr.id("upload-size"), attr.class("font-bold")], ""),
-            html.progress(
-              [
-                attr.class("progress progress-info w-full"),
-                attr.id("upload-progress"),
-                attr.value("0"),
-                attr.Attr("max", "100"),
-              ],
-              [],
-            ),
-          ],
-        ),
-        html.a_text(
-          [
-            attr.id("upload-result"),
-            attr.class("hidden font-bold text-primary pt-4"),
-          ],
-          "Result",
+        attr.class(
+          "fieldset bg-base-200 border-base-300 rounded-box border p-4",
         ),
       ],
+      [
+        html.legend_text([attr.class("fieldset-legend")], "Upload File"),
+        html.form(
+          [
+            attr.enctype("multipart/form-data"),
+            attr.id("form"),
+          ],
+          [
+            html.label_text([attr.class("label")], "File"),
+            html.input([
+              attr.type_("file"),
+              attr.name("file"),
+              attr.class(
+                "file-input file-input-bordered file-input-info w-full",
+              ),
+            ]),
+            html.label_text([attr.class("label")], "Token"),
+            html.input([
+              attr.type_("password"),
+              attr.name("token"),
+              attr.placeholder("top sekret"),
+              attr.class("input input-bordered input-info w-full"),
+            ]),
+            html.div([], [
+              html.button_text([attr.class("btn btn-success w-full mt-8")], "Upload"),
+            ]),
+          ],
+        ),
+      ],
+    ),
+    html.div(
+      [
+        attr.class("progress-container mt-6 hidden text-center max-w-sm w-full"),
+        attr.id("upload-progress-container"),
+      ],
+      [
+        html.div_text([attr.id("upload-name"), attr.class("break-all")], ""),
+        html.div_text([attr.id("upload-size"), attr.class("font-bold")], ""),
+        html.progress(
+          [
+            attr.class("progress progress-info"),
+            attr.id("upload-progress"),
+            attr.value("0"),
+            attr.Attr("max", "100"),
+          ],
+          [],
+        ),
+      ],
+    ),
+    html.a_text(
+      [
+        attr.id("upload-result"),
+        attr.class("hidden link link-secondary link-hover w-full text-center inline-block mt-4"),
+      ],
+      "",
     ),
     html.Script(
       [],
@@ -225,6 +240,7 @@ pub fn home() -> wisp.Response {
           console.log('uploaded: ' + response.data);
           macaron.success('Successfully uploaded!', { action: () => window.location.href = '/' + response.data, timeout: 10000 });
           uploadResult.href = '/' + response.data;
+          uploadResult.innerText = response.data;
           uploadResult.classList.remove('hidden');
         }).catch(error => {
             macaron.error('Failed to upload: ' + error.message);
