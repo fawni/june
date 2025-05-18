@@ -103,7 +103,7 @@ fn document(children: List(html.Node)) -> html.Node {
             html.p_text([attr.class("text-error")], "♡"),
             html.a_text(
               [
-                attr.href("https://github.com/fawni/june"),
+                attr.href("https://codeberg.org/fawn/june"),
                 attr.class("text-secondary"),
               ],
               " Source code",
