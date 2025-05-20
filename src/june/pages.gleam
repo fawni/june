@@ -31,7 +31,7 @@ fn document(children: List(html.Node)) -> html.Node {
       ]),
       html.link([
         attr.href(
-          "https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap",
+          "https://fonts.googleapis.com/css2?family=DM+Sans&display=swap",
         ),
         attr.rel("stylesheet"),
       ]),
@@ -294,7 +294,7 @@ pub fn home() -> wisp.Response {
 
 pub fn not_found(message: String) -> wisp.Response {
   document([
-    html.p_text([attr.class("text-error")], message),
+    html.p_text([attr.class("text-error text-center")], message),
     html.img([attr.src("/public/assets/menhera.png"), attr.class("mt-6")]),
   ])
   |> nakai.to_string
