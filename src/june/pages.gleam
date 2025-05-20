@@ -154,7 +154,10 @@ pub fn home() -> wisp.Response {
         attr.id("upload-progress-container"),
       ],
       [
-        html.div_text([attr.id("upload-name"), attr.style("word-break: break-word")], ""),
+        html.div_text(
+          [attr.id("upload-name"), attr.style("word-break: break-word")],
+          "",
+        ),
         html.div_text([attr.id("upload-size"), attr.class("font-bold")], ""),
         html.progress(
           [
