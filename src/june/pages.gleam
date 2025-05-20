@@ -66,25 +66,18 @@ fn document(children: List(html.Node)) -> html.Node {
                 [attr.class("text-3xl font-bold text-primary text-center")],
                 "June",
               ),
-              html.div(
-                [
-                  attr.class(
-                    "flex py-6 whitespace-pre justify-center align-center",
-                  ),
-                ],
-                [
-                  html.span_text([], "Made with "),
-                  html.span_text([attr.class("text-error")], "♡"),
-                  html.span_text([], " by "),
-                  html.a_text(
-                    [
-                      attr.class("font-bold text-secondary"),
-                      attr.href("https://fawn.moe"),
-                    ],
-                    "fawn",
-                  ),
-                ],
-              ),
+              html.div([attr.class("flex py-6 whitespace-pre justify-center")], [
+                html.span_text([], "Made with "),
+                html.span_text([attr.class("text-error")], "♡"),
+                html.span_text([], " by "),
+                html.a_text(
+                  [
+                    attr.class("font-bold text-secondary"),
+                    attr.href("https://fawn.moe"),
+                  ],
+                  "fawn",
+                ),
+              ]),
               html.Fragment(children),
             ]),
           ]),
@@ -117,51 +110,55 @@ fn document(children: List(html.Node)) -> html.Node {
 
 pub fn home() -> wisp.Response {
   document([
-    html.fieldset(
-      [
-        attr.class(
-          "fieldset bg-base-200 border-base-300 rounded-box border p-4 max-w-sm",
-        ),
-      ],
-      [
-        html.legend_text([attr.class("fieldset-legend")], "Upload File"),
-        html.form([attr.enctype("multipart/form-data"), attr.id("form")], [
-          html.label_text([attr.class("label")], "File"),
-          html.input([
-            attr.type_("file"),
-            attr.name("file"),
-            attr.class("file-input file-input-bordered file-input-info w-full"),
+    html.div([attr.class("flex justify-center")], [
+      html.fieldset(
+        [
+          attr.class(
+            "fieldset bg-base-200 border-base-300 rounded-box border p-4 max-w-sm",
+          ),
+        ],
+        [
+          html.legend_text([attr.class("fieldset-legend")], "Upload File"),
+          html.form([attr.enctype("multipart/form-data"), attr.id("form")], [
+            html.label_text([attr.class("label")], "File"),
+            html.input([
+              attr.type_("file"),
+              attr.name("file"),
+              attr.class(
+                "file-input file-input-bordered file-input-info w-full",
+              ),
+            ]),
+            html.label_text([attr.class("label")], "Token"),
+            html.input([
+              attr.type_("password"),
+              attr.name("token"),
+              attr.placeholder("top sekret"),
+              attr.class("input input-bordered input-info w-full"),
+            ]),
+            html.div([], [
+              html.button_text(
+                [attr.class("btn btn-success w-full mt-8")],
+                "Upload",
+              ),
+            ]),
           ]),
-          html.label_text([attr.class("label")], "Token"),
-          html.input([
-            attr.type_("password"),
-            attr.name("token"),
-            attr.placeholder("top sekret"),
-            attr.class("input input-bordered input-info w-full"),
-          ]),
-          html.div([], [
-            html.button_text(
-              [attr.class("btn btn-success w-full mt-8")],
-              "Upload",
-            ),
-          ]),
-        ]),
-      ],
-    ),
+        ],
+      ),
+    ]),
     html.div(
       [
-        attr.class("progress-container mt-6 hidden text-center max-w-sm w-full"),
+        attr.class("progress-container mt-6 hidden text-center"),
         attr.id("upload-progress-container"),
       ],
       [
         html.div_text(
-          [attr.id("upload-name"), attr.style("word-break: break-word")],
+          [attr.id("upload-name"), attr.class("max-w-[60ch] truncate")],
           "",
         ),
         html.div_text([attr.id("upload-size"), attr.class("font-bold")], ""),
         html.progress(
           [
-            attr.class("progress progress-info"),
+            attr.class("progress progress-info max-w-sm"),
             attr.id("upload-progress"),
             attr.value("0"),
             attr.Attr("max", "100"),
