@@ -186,7 +186,10 @@ pub fn home() -> wisp.Response {
           html.div([attr.class("card-body items-center text-center p-4")], [
             html.h2_text([attr.id("result-name")], ""),
             html.div([attr.class("card-actions")], [
-              html.button_text([attr.id("result-copy"), attr.class("btn btn-primary")], "Copy"),
+              html.button_text(
+                [attr.id("result-copy"), attr.class("btn btn-primary")],
+                "Copy",
+              ),
             ]),
           ]),
         ]),
