@@ -68,7 +68,7 @@ fn document(children: List(html.Node)) -> html.Node {
               ),
               html.div([attr.class("flex py-6 whitespace-pre justify-center")], [
                 html.span_text([], "Made with "),
-                html.span_text([attr.class("text-error")], "♡"),
+                html.b_text([attr.class("text-error")], "♡"),
                 html.span_text([], " by "),
                 html.a_text(
                   [
@@ -167,15 +167,31 @@ pub fn home() -> wisp.Response {
         ),
       ],
     ),
-    html.div([attr.class("w-full text-center mt-4")], [
-      html.a_text(
-        [
-          attr.id("upload-result"),
-          attr.class("hidden link link-secondary link-hover"),
-        ],
-        "",
-      ),
-    ]),
+    html.div(
+      [attr.id("result-container"), attr.class("hidden w-full text-center")],
+      [
+        html.div([attr.class("card bg-base-100 w-96 shadow-sm")], [
+          html.figure([attr.class("pt-4")], [
+            html.div([attr.class("w-2/5")], [
+              html.a([attr.id("result-url"), attr.href("")], [
+                html.img([
+                  attr.id("result-image"),
+                  attr.src(""),
+                  attr.alt("Uploaded image"),
+                  attr.class("rounded-xl"),
+                ]),
+              ]),
+            ]),
+          ]),
+          html.div([attr.class("card-body items-center text-center p-4")], [
+            html.h2_text([attr.id("result-name")], ""),
+            html.div([attr.class("card-actions")], [
+              html.button_text([attr.id("result-copy"), attr.class("btn btn-primary")], "Copy"),
+            ]),
+          ]),
+        ]),
+      ],
+    ),
     html.Script(
       [],
       "
@@ -185,7 +201,11 @@ pub fn home() -> wisp.Response {
       const progressName = document.getElementById('upload-name');
       const progressSize = document.getElementById('upload-size');
       const progressBar = document.getElementById('upload-progress');
-      const uploadResult = document.getElementById('upload-result');
+      const resultContainer = document.getElementById('result-container');
+      const resultUrl = document.getElementById('result-url');
+      const resultImage = document.getElementById('result-image');
+      const resultName = document.getElementById('result-name');
+      const resultCopy = document.getElementById('result-copy');
 
       function formatBytes(bytes, decimals = 1) {
         if (bytes === 0) return '0 Bytes';
@@ -224,7 +244,7 @@ pub fn home() -> wisp.Response {
         progressSize.innerText = fileSize;
         progressContainer.classList.remove('hidden');
         progressBar.value = 0;
-        uploadResult.classList.add('hidden');
+        resultContainer.classList.add('hidden');
 
         axios.post('/', formData, {
         onUploadProgress: (progressEvent) => {
@@ -235,16 +255,25 @@ pub fn home() -> wisp.Response {
         }
         }).then(response => {
           console.log('uploaded: ' + response.data);
-          macaron.success('Successfully uploaded!', { action: () => window.location.href = '/' + response.data, timeout: 10000 });
-          uploadResult.href = '/' + response.data;
-          uploadResult.innerText = response.data;
-          uploadResult.classList.remove('hidden');
+          macaron.success('Successfully uploaded!', { action: () => window.location.href = '/' + response.data});
+          progressContainer.classList.add('hidden');
+          resultUrl.href = '/' + response.data;
+          resultImage.src = '/' + response.data;
+          resultName.innerText = response.data;
+          resultContainer.classList.remove('hidden');
         }).catch(error => {
             macaron.error('Failed to upload: ' + error.message);
         });
       };
 
       form.addEventListener('submit', handleSubmit);
+      resultCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(window.location.origin + '/' + resultName.innerText).then(function() {
+            macaron.success('Copied url to clipboard successfully!');
+        }).catch(function(err) {
+            macaron.error('Could not copy: ' + err);
+        });
+      })
 
       function dataURItoFile(dataURI) {
         var byteString;
