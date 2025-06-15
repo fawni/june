@@ -178,7 +178,7 @@ pub fn home() -> wisp.Response {
                   attr.id("result-image"),
                   attr.src(""),
                   attr.alt("Uploaded image"),
-                  attr.class("rounded-xl"),
+                  attr.class("hidden rounded-xl"),
                 ]),
               ]),
             ]),
@@ -188,7 +188,7 @@ pub fn home() -> wisp.Response {
             html.div([attr.class("card-actions")], [
               html.button_text(
                 [attr.id("result-copy"), attr.class("btn btn-primary")],
-                "Copy",
+                "Copy URL",
               ),
             ]),
           ]),
@@ -248,6 +248,7 @@ pub fn home() -> wisp.Response {
         progressContainer.classList.remove('hidden');
         progressBar.value = 0;
         resultContainer.classList.add('hidden');
+        resultImage.classList.add('hidden');
 
         axios.post('/', formData, {
         onUploadProgress: (progressEvent) => {
@@ -261,7 +262,10 @@ pub fn home() -> wisp.Response {
           macaron.success('Successfully uploaded!', { action: () => window.location.href = '/' + response.data});
           progressContainer.classList.add('hidden');
           resultUrl.href = '/' + response.data;
-          resultImage.src = '/' + response.data;
+          if (isImage(response.data)) {
+            resultImage.classList.remove('hidden')
+            resultImage.src = '/' + response.data;
+          }
           resultName.innerText = response.data;
           resultContainer.classList.remove('hidden');
         }).catch(error => {
@@ -296,6 +300,12 @@ pub fn home() -> wisp.Response {
         var blob = new Blob([ia], {type:mimeString});
 
         return new File([blob], `clipboard.${ext}`, {type: mimeString});
+      }
+
+      function isImage(fileName) {
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'];
+        const fileExtension = fileName.slice(((fileName.lastIndexOf('.') - 1) >>> 0) + 2).toLowerCase();
+        return imageExtensions.includes(`.${fileExtension}`);
       }
 
       document.onpaste = function(event) {
