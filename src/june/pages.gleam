@@ -91,7 +91,7 @@ fn document(children: List(html.Node)) -> html.Node {
         ],
         [
           html.span([attr.class("flex")], [
-            html.Text("Copyright (c) 2025 "),
+            html.Text("Copyright © 2025 "),
             html.b_text([], "fawn"),
             html.b_text([attr.class("text-error")], "♡"),
             html.a_text(
