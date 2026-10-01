@@ -269,11 +269,74 @@ fn handle_retrieve_file(req: wisp.Request) -> wisp.Response {
   use <- wisp.require_method(req, http.Get)
 
   case retrieve_file(req) {
-    Ok(path) -> wisp.ok() |> wisp.set_body(wisp.File(path, 0, option.None))
+    Ok(path) -> {
+      let resp = wisp.ok() |> wisp.set_body(wisp.File(path, 0, option.None))
+      case content_type_for(path) {
+        Ok(content_type) ->
+          resp
+          |> wisp.set_header("content-type", content_type)
+          |> wisp.set_header("content-disposition", "inline")
+        Error(_) -> resp
+      }
+    }
     Error(err) ->
       err
       |> snag.line_print
       |> pages.not_found
+  }
+}
+
+fn content_type_for(path: String) -> Result(String, Nil) {
+  case content_type_from_extension(path) {
+    Ok(content_type) -> Ok(content_type)
+    Error(_) -> sniff_content_type(path)
+  }
+}
+
+fn sniff_content_type(path: String) -> Result(String, Nil) {
+  use bits <- result.try(
+    simplifile.read_bits(from: path)
+    |> result.replace_error(Nil),
+  )
+
+  case bits {
+    <<0x89, "PNG":utf8, _:bytes>> -> Ok("image/png")
+    <<0xFF, 0xD8, 0xFF, _:bytes>> -> Ok("image/jpeg")
+    <<"GIF8":utf8, _:bytes>> -> Ok("image/gif")
+    <<"RIFF":utf8, _:size(32), "WEBP":utf8, _:bytes>> -> Ok("image/webp")
+    <<"BM":utf8, _:bytes>> -> Ok("image/bmp")
+    <<0, 0, 1, 0, _:bytes>> -> Ok("image/x-icon")
+    <<"%PDF":utf8, _:bytes>> -> Ok("application/pdf")
+    <<_:size(32), "ftyp":utf8, brand:bytes-size(4), _:bytes>> ->
+      case brand {
+        <<"avif":utf8>> -> Ok("image/avif")
+        _ -> Ok("video/mp4")
+      }
+    <<0x1A, 0x45, 0xDF, 0xA3, _:bytes>> -> Ok("video/webm")
+    <<"OggS":utf8, _:bytes>> -> Ok("audio/ogg")
+    <<"ID3":utf8, _:bytes>> -> Ok("audio/mpeg")
+    _ -> Error(Nil)
+  }
+}
+
+fn content_type_from_extension(path: String) -> Result(String, Nil) {
+  case filepath.extension(path) |> result.map(string.lowercase) {
+    Ok("jpg") | Ok("jpeg") -> Ok("image/jpeg")
+    Ok("png") -> Ok("image/png")
+    Ok("gif") -> Ok("image/gif")
+    Ok("webp") -> Ok("image/webp")
+    Ok("avif") -> Ok("image/avif")
+    Ok("bmp") -> Ok("image/bmp")
+    Ok("svg") -> Ok("image/svg+xml")
+    Ok("ico") -> Ok("image/x-icon")
+    Ok("mp4") -> Ok("video/mp4")
+    Ok("webm") -> Ok("video/webm")
+    Ok("mp3") -> Ok("audio/mpeg")
+    Ok("ogg") -> Ok("audio/ogg")
+    Ok("wav") -> Ok("audio/wav")
+    Ok("pdf") -> Ok("application/pdf")
+    Ok("txt") -> Ok("text/plain; charset=utf-8")
+    _ -> Error(Nil)
   }
 }
 
