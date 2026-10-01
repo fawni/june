@@ -128,6 +128,14 @@ pub fn home() -> wisp.Response {
                 "file-input file-input-bordered file-input-info w-full",
               ),
             ]),
+            html.label_text([attr.class("label")], "URL"),
+            html.input([
+              attr.type_("url"),
+              attr.id("url-input"),
+              attr.placeholder("https://ptpimg.me/rip.png"),
+              attr.class("input input-bordered input-info w-full"),
+            ]),
+            html.div([attr.class("divider")], []),
             html.label_text([attr.class("label")], "Token"),
             html.input([
               attr.type_("password"),
@@ -200,6 +208,7 @@ pub fn home() -> wisp.Response {
       "
       const form = document.getElementById('form');
       const fileInput = document.querySelector('input[type=\\'file\\']');
+      const urlInput = document.getElementById('url-input');
       const progressContainer = document.getElementById('upload-progress-container');
       const progressName = document.getElementById('upload-name');
       const progressSize = document.getElementById('upload-size');
@@ -219,16 +228,48 @@ pub fn home() -> wisp.Response {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
       }
 
+      async function fileFromUrl(url, token) {
+        let res;
+        try {
+          res = await axios.post('/fetch', new URLSearchParams({ url: url, token: token }), {
+            responseType: 'blob',
+          });
+        } catch (e) {
+          if (e.response && e.response.data instanceof Blob) {
+            throw new Error(await e.response.data.text());
+          }
+          throw e;
+        }
+        const blob = res.data;
+        let name = new URL(url).pathname.split('/').pop() || 'image';
+        if (!name.includes('.')) {
+          name += '.' + (blob.type.split('/')[1] || 'png').split('+')[0];
+        }
+        return new File([blob], name, { type: blob.type });
+      }
+
       const handleSubmit = async (event) => {
         event.preventDefault();
         const formData = new FormData(form);
 
-        if (form.elements.file.files.length === 0) {
-          macaron.error('error: No file provided');
+        let file = form.elements.file.files[0];
+        const url = urlInput.value.trim();
+
+        if (!file && url) {
+          try {
+            file = await fileFromUrl(url, form.elements.token.value);
+          } catch (e) {
+            macaron.error('Could not fetch that URL: ' + e.message);
+            return;
+          }
+        }
+
+        if (!file) {
+          macaron.error('error: No file or URL provided');
           return;
         }
 
-        const file = form.elements.file.files[0];
+        formData.set('file', file);
         const fileName = file.name;
         const fileSize = formatBytes(file.size);
 
@@ -238,7 +279,7 @@ pub fn home() -> wisp.Response {
           macaron.error('Error verifying token', e);
         });
 
-        if (verify.status !== 200) {
+        if (!verify || verify.status !== 200) {
           macaron.error('error: Invalid token');
           return;
         }

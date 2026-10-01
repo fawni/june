@@ -1,9 +1,16 @@
 import filepath
+import gleam/bit_array
 import gleam/bool
+import gleam/bytes_tree
 import gleam/http
+import gleam/http/request
+import gleam/http/response
+import gleam/httpc
+import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
+import gleam/string
 import gleam/string_tree
 import glenvy/env
 import june/blake2b
@@ -12,6 +19,8 @@ import june/web
 import simplifile
 import snag
 import wisp
+
+const max_fetch_bytes = 26_214_400
 
 fn data_path() {
   case env.get_string("HOME") {
@@ -26,6 +35,7 @@ pub fn handle_request(req: wisp.Request) -> wisp.Response {
   case wisp.path_segments(req) {
     [] -> handle_root(req)
     ["verify"] -> handle_verify(req)
+    ["fetch"] -> handle_fetch(req)
     _ -> handle_retrieve_file(req)
   }
 }
@@ -42,6 +52,95 @@ fn handle_verify(req: wisp.Request) -> wisp.Response {
     True -> wisp.ok() |> wisp.string_body("valid token")
     False -> wisp.html_response("invalid token" |> string_tree.from_string, 403)
   }
+}
+
+fn handle_fetch(req: wisp.Request) -> wisp.Response {
+  use <- wisp.require_method(req, http.Post)
+  use formdata <- wisp.require_form(req)
+  let token = wisp.get_secret_key_base(req)
+
+  case validate_formdata(token, formdata) {
+    #(_, Some(True)) -> {
+      let fetched = {
+        use url <- result.try(
+          list.key_find(formdata.values, "url")
+          |> as_snag("No URL provided"),
+        )
+        wisp.log_info("Fetching remote image " <> url)
+        fetch_image(url)
+      }
+
+      case fetched {
+        Ok(#(content_type, body)) ->
+          wisp.response(200)
+          |> wisp.set_header("content-type", content_type)
+          |> wisp.set_body(wisp.Bytes(bytes_tree.from_bit_array(body)))
+        Error(err) ->
+          err
+          |> snag.line_print
+          |> string_tree.from_string
+          |> wisp.html_response(400)
+      }
+    }
+    #(invalid, Some(False)) -> {
+      wisp.log_warning(
+        "User attempted to fetch with an invalid token: \"" <> invalid <> "\"",
+      )
+
+      snag.new("Invalid token")
+      |> snag.line_print
+      |> string_tree.from_string
+      |> wisp.html_response(403)
+    }
+    #(_, None) -> {
+      wisp.log_warning("User attempted to fetch without a token")
+
+      snag.new("Missing token")
+      |> snag.line_print
+      |> string_tree.from_string
+      |> wisp.html_response(403)
+    }
+  }
+}
+
+fn fetch_image(url: String) -> snag.Result(#(String, BitArray)) {
+  use target <- result.try(
+    request.to(url)
+    |> as_snag("Invalid URL"),
+  )
+
+  let target =
+    target
+    |> request.set_header(
+      "user-agent",
+      "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    )
+    |> request.set_body(<<>>)
+
+  use resp <- result.try(
+    httpc.send_bits(target)
+    |> as_snag("Could not reach that URL"),
+  )
+
+  use <- bool.guard(
+    resp.status != 200,
+    snag.error("Remote server returned status " <> int.to_string(resp.status)),
+  )
+
+  let content_type =
+    response.get_header(resp, "content-type")
+    |> result.unwrap("")
+
+  use <- bool.guard(
+    string.starts_with(content_type, "image/") == False,
+    snag.error("That URL is not an image"),
+  )
+  use <- bool.guard(
+    bit_array.byte_size(resp.body) > max_fetch_bytes,
+    snag.error("That image is too large"),
+  )
+
+  Ok(#(content_type, resp.body))
 }
 
 fn handle_root(req: wisp.Request) -> wisp.Response {
