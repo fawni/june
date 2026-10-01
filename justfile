@@ -3,10 +3,9 @@ _default:
 
 @init:
     gleam deps download
-    gleam run -m tailwind/install
 
 @tailwind:
-    gleam run -m tailwind/run
+    bunx tailwindcss@3.4.19 --config=tailwind.config.js --input=./src/css/june.css --output=./priv/static/css/june.css --minify
 
 @run: (tailwind)
     gleam run

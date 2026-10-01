@@ -1,4 +1,3 @@
-import gleam/string_tree
 import nakai
 import nakai/attr
 import nakai/html
@@ -371,7 +370,6 @@ pub fn home() -> wisp.Response {
     ),
   ])
   |> nakai.to_string
-  |> string_tree.from_string
   |> wisp.html_response(200)
 }
 
@@ -381,6 +379,5 @@ pub fn not_found(message: String) -> wisp.Response {
     html.img([attr.src("/public/assets/menhera.png"), attr.class("mt-6")]),
   ])
   |> nakai.to_string
-  |> string_tree.from_string
   |> wisp.html_response(404)
 }

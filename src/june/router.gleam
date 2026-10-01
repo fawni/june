@@ -1,3 +1,4 @@
+import dot_env/env
 import filepath
 import gleam/bit_array
 import gleam/bool
@@ -11,8 +12,6 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/result
 import gleam/string
-import gleam/string_tree
-import glenvy/env
 import june/blake2b
 import june/pages
 import june/web
@@ -50,7 +49,7 @@ fn handle_verify(req: wisp.Request) -> wisp.Response {
 
   case verify {
     True -> wisp.ok() |> wisp.string_body("valid token")
-    False -> wisp.html_response("invalid token" |> string_tree.from_string, 403)
+    False -> wisp.html_response("invalid token", 403)
   }
 }
 
@@ -78,7 +77,6 @@ fn handle_fetch(req: wisp.Request) -> wisp.Response {
         Error(err) ->
           err
           |> snag.line_print
-          |> string_tree.from_string
           |> wisp.html_response(400)
       }
     }
@@ -89,7 +87,6 @@ fn handle_fetch(req: wisp.Request) -> wisp.Response {
 
       snag.new("Invalid token")
       |> snag.line_print
-      |> string_tree.from_string
       |> wisp.html_response(403)
     }
     #(_, None) -> {
@@ -97,7 +94,6 @@ fn handle_fetch(req: wisp.Request) -> wisp.Response {
 
       snag.new("Missing token")
       |> snag.line_print
-      |> string_tree.from_string
       |> wisp.html_response(403)
     }
   }
@@ -163,13 +159,11 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
           case delete_file(file_name) {
             Ok(msg) -> {
               msg
-              |> string_tree.from_string
               |> wisp.html_response(200)
             }
             Error(err) -> {
               err
               |> snag.line_print
-              |> string_tree.from_string
               |> wisp.html_response(400)
             }
           }
@@ -178,12 +172,11 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
           case upload_file(formdata) {
             Ok(name) -> {
               wisp.created()
-              |> wisp.html_body(name |> string_tree.from_string)
+              |> wisp.html_body(name)
             }
             Error(err) -> {
               err
               |> snag.line_print
-              |> string_tree.from_string
               |> wisp.html_response(400)
             }
           }
@@ -197,7 +190,6 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
 
       snag.new("Invalid token: \"" <> invalid <> "\"")
       |> snag.line_print
-      |> string_tree.from_string
       |> wisp.html_response(400)
     }
     #(_, None) -> {
@@ -205,7 +197,6 @@ fn handle_form_submission(req: wisp.Request) -> wisp.Response {
 
       snag.new("Missing token")
       |> snag.line_print
-      |> string_tree.from_string
       |> wisp.html_response(400)
     }
   }
@@ -278,7 +269,7 @@ fn handle_retrieve_file(req: wisp.Request) -> wisp.Response {
   use <- wisp.require_method(req, http.Get)
 
   case retrieve_file(req) {
-    Ok(path) -> wisp.ok() |> wisp.set_body(wisp.File(path: path))
+    Ok(path) -> wisp.ok() |> wisp.set_body(wisp.File(path, 0, option.None))
     Error(err) ->
       err
       |> snag.line_print
